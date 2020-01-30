@@ -17,9 +17,14 @@ read_message_folder <- function(message_folder) {
       ), tz = "America/Toronto")
     ) %>%
     mutate_at(vars(timestamp), list(year = year, month = month, day = day, hour = hour, minute = minute)) %>%
+    mutate(
+      month_fct = month(timestamp, label = TRUE),
+      wday = wday(timestamp, week_start = 1),
+      wday_fct = wday(timestamp, label = TRUE, week_start = 1)
+    ) %>%
     arrange(timestamp) %>%
     mutate(msg_id = row_number()) %>%
-    select(msg_id, source_folder, source_file, timestamp_ms, timestamp:minute, sender_name, type, content)
+    select(msg_id, source_folder, source_file, timestamp_ms, timestamp:wday_fct, sender_name, type, content)
 
   messages_to_return <- messages_to_return %>%
     left_join(
