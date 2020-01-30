@@ -66,35 +66,6 @@ gce_msgs %>%
   geom_point()
 
 
-find_next_reply <- function(var_to_retrieve, grouping_var) {
-  
-}
-
-gce_msgs %>%
-  mutate(is_diff_author_reply = sender_name != lag(sender_name))
-
-gce_msgs %>%
-  mutate(thread_start = sender_name != lag(sender_name)) %>%
-  mutate(thread_start = ifelse(is.na(thread_start), TRUE, thread_start)) %>%
-  select(msg_id, timestamp, mins_until_next_message, sender_name, content, thread_start) %>%
-  View()
-
-gce_msgs %>%
-  mutate(is_thread_start = sender_name != lag(sender_name)) %>%
-  mutate(is_thread_start = ifelse(is.na(is_thread_start), TRUE, is_thread_start)) %>%
-  select(msg_id, timestamp, is_thread_start) %>%
-  filter(is_thread_start) %>%
-  mutate(mins_until_next_thread = time_length(interval(timestamp, lead(timestamp)), "minutes"))
-
-gce_msgs %>%
-  left_join(
-    gce_msgs %>%
-      select(msg_id, timestamp, is_thread_start) %>%
-      filter(is_thread_start) %>%
-      mutate(thread_id = row_number()) %>%
-      mutate(mins_until_next_thread = time_length(interval(timestamp, lead(timestamp)), "minutes"))
-  ) %>%
-  fill(thread_id)
 
 ## get last message in each thread
 gce_msgs %>%
