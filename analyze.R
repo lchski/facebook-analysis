@@ -8,4 +8,6 @@ el_msgs %>%
 
 gce_msgs %>%
   ggplot(aes(x = month_fct, fill = factor(year))) +
-  geom_bar(position = "stack")
+  geom_bar(position = "stack") +
+  scale_fill_brewer(palette = "Purples") +
+  theme_minimal()

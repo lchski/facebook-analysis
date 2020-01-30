@@ -46,3 +46,9 @@ summarize_messages <- function(dataset, ...) {
     arrange(-words_prop) %>%
     select(..., messages, messages_prop, words, words_prop)
 }
+
+lookup_message_folder <- function(string_to_search) {
+  message_folders %>%
+    filter(str_detect(folder, string_to_search))
+}
+
