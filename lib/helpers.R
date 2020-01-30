@@ -13,7 +13,8 @@ read_message_folder <- function(message_folder) {
         origin = "1970-01-01",
         timezone = "America/Toronto"
       ))
-    )
+    ) %>%
+    mutate(source = str_remove(source, fixed(message_folders_prefix)))
 }
 
 
