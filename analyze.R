@@ -11,3 +11,9 @@ gce_msgs %>%
   geom_bar(position = "stack") +
   scale_fill_brewer(palette = "Purples") +
   theme_minimal()
+
+gce_msgs %>%
+  ggplot(aes(x = hour, y = n_words, fill = sender_name)) +
+  geom_col(position = "stack") +
+  scale_fill_brewer(palette = "Purples") +
+  theme_minimal()
