@@ -1,6 +1,6 @@
 
 read_message_folder <- function(message_folder) {
-  fs::dir_ls(paste0(message_folders_prefix, message_folder, "/"), regexp = "\\.json$") %>%
+  messages_to_return <- fs::dir_ls(paste0(message_folders_prefix, message_folder, "/"), regexp = "\\.json$") %>%
     map_dfr(~ read_json(.x, flatten = TRUE)$messages %>%
               transpose() %>%
               as_tibble() %>%
@@ -20,17 +20,24 @@ read_message_folder <- function(message_folder) {
     arrange(timestamp) %>%
     mutate(msg_id = row_number()) %>%
     select(msg_id, source_folder, source_file, timestamp_ms, timestamp:minute, sender_name, type, content)
+
+  messages_to_return <- messages_to_return %>%
+    left_join(
+      messages_to_return %>%
+        unnest_tokens(word, content) %>%
+        group_by(msg_id) %>%
+        summarize(n_words = n())
+    )
+  
+  messages_to_return  
 }
 
 
-
-remove_fr_columns <- function(dataset) {
+summarize_messages <- function(dataset, ...) {
   dataset %>%
-    select(
-      -DESCRIP_F,
-      -TITLE_F,
-      -DEPT_F,
-      -INDICATORFRA,
-      -SUBINDICATORFRA
-    )
+    group_by(...) %>%
+    summarize(messages = n(), words = sum(n_words, na.rm = TRUE)) %>%
+    mutate(messages_prop = messages / sum(messages), words_prop = words / sum(words)) %>%
+    arrange(-words_prop) %>%
+    select(..., messages, messages_prop, words, words_prop)
 }
