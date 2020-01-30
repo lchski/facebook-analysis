@@ -23,8 +23,36 @@ read_message_folder <- function(message_folder) {
       wday_fct = wday(timestamp, label = TRUE, week_start = 1)
     ) %>%
     arrange(timestamp) %>%
+    mutate(
+      mins_until_next_message = time_length(interval(timestamp, lead(timestamp)), "minutes")
+    ) %>%
+    mutate(
+      mins_since_last_message = lag(mins_until_next_message)
+    ) %>%
+    mutate(is_thread_start = sender_name != lag(sender_name)) %>%
+    mutate(is_thread_start = ifelse(is.na(is_thread_start), TRUE, is_thread_start)) %>%
     mutate(msg_id = row_number()) %>%
-    select(msg_id, source_folder, source_file, timestamp_ms, timestamp:wday_fct, sender_name, type, content)
+    left_join(
+      gce_msgs %>%
+        select(msg_id, timestamp, is_thread_start) %>%
+        filter(is_thread_start) %>%
+        mutate(thread_id = row_number()) %>%
+        mutate(mins_until_next_thread = time_length(interval(timestamp, lead(timestamp)), "minutes"))
+    ) %>%
+    fill(thread_id) %>%
+    select(
+      msg_id,
+      source_folder,
+      source_file,
+      timestamp_ms,
+      timestamp:mins_since_last_message,
+      sender_name,
+      thread_id,
+      is_thread_start,
+      mins_until_next_thread,
+      type,
+      content
+    )
 
   messages_to_return <- messages_to_return %>%
     left_join(

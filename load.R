@@ -1,6 +1,7 @@
 library(tidyverse)
 library(lubridate)
 library(jsonlite)
+library(tidytext)
 
 library(helpers)
 
