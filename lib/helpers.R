@@ -76,7 +76,14 @@ extract_threads <- function(messages) {
     ) %>%
     ungroup() %>%
     mutate(
+      mins_thread_length = time_length(interval(timestamp_start, timestamp_end), "minutes"),
       mins_until_next_thread = time_length(interval(timestamp_end, lead(timestamp_start)), "minutes")
+    ) %>%
+    mutate_at(vars(timestamp_start), list(year_start = year, month_start = month, day_start = day, hour_start = hour, minute_start = minute)) %>%
+    mutate(
+      month_start_fct = month(timestamp_start, label = TRUE),
+      wday_start = wday(timestamp_start, week_start = 1),
+      wday_start_fct = wday(timestamp_start, label = TRUE, week_start = 1)
     )
 }
 

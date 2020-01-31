@@ -70,3 +70,15 @@ gce_msgs %>%
 gce_threads <- gce_msgs %>%
   extract_threads()
 
+gce_threads %>%
+  filter(! is.na(mins_until_next_thread)) %>%
+  mutate(mins_unt_bin = cut(
+    mins_until_next_thread,
+    c(0, 1, 5, 10, 15, 30, 45, 60, 90, 120, 240, 480, 1440, Inf)
+  )) %>%
+  ggplot(aes(x = mins_unt_bin)) +
+  geom_bar() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+
+
