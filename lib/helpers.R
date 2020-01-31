@@ -36,8 +36,7 @@ read_message_folder <- function(message_folder) {
       gce_msgs %>%
         select(msg_id, timestamp, is_thread_start) %>%
         filter(is_thread_start) %>%
-        mutate(thread_id = row_number()) %>%
-        mutate(mins_until_next_thread = time_length(interval(timestamp, lead(timestamp)), "minutes"))
+        mutate(thread_id = row_number())
     ) %>%
     fill(thread_id) %>%
     select(
@@ -49,7 +48,6 @@ read_message_folder <- function(message_folder) {
       sender_name,
       thread_id,
       is_thread_start,
-      mins_until_next_thread,
       type,
       content
     )
@@ -63,6 +61,23 @@ read_message_folder <- function(message_folder) {
     )
   
   messages_to_return  
+}
+
+extract_threads <- function(messages) {
+  messages %>%
+    group_by(thread_id, sender_name) %>%
+    summarize(
+      n_msgs = n(),
+      n_words = sum(n_words),
+      msg_id_start = min(msg_id),
+      msg_id_end = max(msg_id),
+      timestamp_start = min(timestamp),
+      timestamp_end = max(timestamp)
+    ) %>%
+    ungroup() %>%
+    mutate(
+      mins_until_next_thread = time_length(interval(timestamp_end, lead(timestamp_start)), "minutes")
+    )
 }
 
 
