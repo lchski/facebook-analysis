@@ -67,49 +67,6 @@ gce_msgs %>%
 
 
 
-## get last message in each thread
-gce_msgs %>%
-  group_by(thread_id) %>%
-  top_n(1, wt = msg_id) %>%
-  select(msg_id, timestamp, thread_id, sender_name, is_thread_start, content) %>%
-  mutate(is_thread_end = TRUE)
-
-gce_msgs %>%
-  left_join(
-    gce_msgs %>%
-      group_by(thread_id) %>%
-      top_n(1, wt = msg_id) %>%
-      select(msg_id, timestamp, thread_id) %>%
-      mutate(is_thread_end = TRUE)
-  )
-
-gce_msgs %>%
-  group_by(thread_id, sender_name) %>%
-  summarize(
-    msg_id_start = min(msg_id),
-    msg_id_end = max(msg_id),
-    timestamp_start = min(timestamp),
-    timestamp_end = max(timestamp)
-  ) %>%
-  mutate(
-    mins_until_next_thread = time_length(interval(timestamp_end, lead(timestamp_start)), "minutes")
-  )
-
-gce_msgs %>%
-  group_by(thread_id, sender_name) %>%
-  summarize(
-    n_msgs = n(),
-    n_words = sum(n_words),
-    msg_id_start = min(msg_id),
-    msg_id_end = max(msg_id),
-    timestamp_start = min(timestamp),
-    timestamp_end = max(timestamp)
-  ) %>%
-  ungroup() %>%
-  mutate(
-    mins_until_next_thread = time_length(interval(timestamp_end, lead(timestamp_start)), "minutes")
-  )
-
 gce_threads <- gce_msgs %>%
   extract_threads()
 
