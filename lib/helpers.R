@@ -21,7 +21,7 @@ read_message_folder <- function(message_folder) {
       wday_fct = wday(timestamp, label = TRUE, week_start = 1)
     ) %>%
     group_by(source_folder) %>%
-    arrange(source_folder, source_file, timestamp) %>%
+    arrange(source_folder, timestamp) %>%
     mutate(
       mins_until_next_message = time_length(interval(timestamp, lead(timestamp)), "minutes")
     ) %>%
