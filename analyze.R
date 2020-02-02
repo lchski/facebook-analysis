@@ -82,3 +82,10 @@ gce_threads %>%
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 
 
+
+messages %>%
+  ungroup() %>%
+  summarize_messages(sender_name, source_folder) %>%
+  mutate(words_per_message = words / messages) %>%
+  View("wpm")
+

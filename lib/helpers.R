@@ -1,10 +1,8 @@
 
 read_message_folder <- function(message_folder) {
   messages_to_return <- fs::dir_ls(paste0(message_folders_prefix, message_folder, "/"), regexp = "\\.json$") %>%
-    map_dfr(~ read_json(.x, flatten = TRUE)$messages %>%
-              transpose() %>%
-              as_tibble() %>%
-              unnest(cols = c(sender_name, timestamp_ms, content, type)),
+    map_dfr(~ read_json(.x, flatten = TRUE, simplifyDataFrame = TRUE)$messages %>%
+              as_tibble(),
             .id = "source"
     ) %>%
     mutate(source = str_remove(source, fixed(message_folders_prefix))) %>%
@@ -22,7 +20,8 @@ read_message_folder <- function(message_folder) {
       wday = wday(timestamp, week_start = 1),
       wday_fct = wday(timestamp, label = TRUE, week_start = 1)
     ) %>%
-    arrange(timestamp) %>%
+    group_by(source_folder) %>%
+    arrange(source_folder, source_file, timestamp) %>%
     mutate(
       mins_until_next_message = time_length(interval(timestamp, lead(timestamp)), "minutes")
     ) %>%
@@ -31,32 +30,41 @@ read_message_folder <- function(message_folder) {
     ) %>%
     mutate(is_thread_start = sender_name != lag(sender_name)) %>%
     mutate(is_thread_start = ifelse(is.na(is_thread_start), TRUE, is_thread_start)) %>%
-    mutate(msg_id = row_number()) %>%
+    mutate(msg_id = row_number())
+
+  messages_to_return <- messages_to_return %>%
     left_join(
-      gce_msgs %>%
+      messages_to_return %>%
         select(msg_id, timestamp, is_thread_start) %>%
         filter(is_thread_start) %>%
         mutate(thread_id = row_number())
     ) %>%
-    fill(thread_id) %>%
-    select(
-      msg_id,
-      source_folder,
-      source_file,
-      timestamp_ms,
-      timestamp:mins_since_last_message,
-      sender_name,
-      thread_id,
-      is_thread_start,
-      type,
-      content
-    )
+    fill(thread_id)
+
+  ## this is where we'd select/remove
+  ## extra vars outside the base/norm:
+  ##     photos, users, sticker.uri, share.link, files, audio_files, reactions, gifs, videos, call_duration, missed
+  ##
+  ## e.g. the set based just around timestamp, type, sender_name, content:
+  ## messages_to_return <- messages_to_return %>%
+  ##   select(
+  ##     msg_id,
+  ##     source_folder,
+  ##     source_file,
+  ##     timestamp_ms,
+  ##     timestamp:mins_since_last_message,
+  ##     sender_name,
+  ##     thread_id,
+  ##     is_thread_start,
+  ##     type,
+  ##     content
+  ##   )
 
   messages_to_return <- messages_to_return %>%
     left_join(
       messages_to_return %>%
         unnest_tokens(word, content) %>%
-        group_by(msg_id) %>%
+        group_by(source_folder, msg_id) %>%
         summarize(n_words = n())
     )
   
