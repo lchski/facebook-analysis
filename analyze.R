@@ -85,7 +85,14 @@ gce_threads %>%
 
 messages %>%
   ungroup() %>%
-  summarize_messages(sender_name, source_folder) %>%
+  summarize_messages(sender_name) %>%
   mutate(words_per_message = words / messages) %>%
   View("wpm")
+
+## my wordsss
+lc_words <- messages %>%
+  ungroup() %>%
+  filter(sender_name == "Lucas Cherkewski")  %>%
+  unnest_tokens(word, content) %>%
+  select(-photos:-missed)
 
